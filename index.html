@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streakify.com</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .float-animation { animation: float-slow 4s ease-in-out infinite; }
+        .pulse-ring-anim { animation: pulse-ring 3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none max-w-sm w-full"></div>
+
+    <!-- 1. NAVBAR -->
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Logo with Image Icon -->
+            <a href="#hero" class="flex items-center gap-3 group">
+                <div class="w-11 h-11 rounded-2xl overflow-hidden ring-1 ring-slate-300 shadow-sm group-hover:scale-105 transition-transform duration-300 bg-slate-100">
+                    <img src="pexels-anntarazevich-4985336.jpg" alt="HabitPulse Icon" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://placehold.co/100x100/059669/ffffff?text=HP';">
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-tight text-slate-900 group-hover:text-emerald-600 transition-colors duration-300">Streakify</span>
+                    <span class="block text-[10px] font-bold text-emerald-600 tracking-widest uppercase">Target & Streak Engine</span>
+                </div>
+            </a>
+
+            <!-- Desktop Nav Links -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-semibold">
+                <a href="#hero" class="text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-2">
+                    <i data-lucide="home" class="w-4 h-4"></i> Home
+                </a>
+                <a href="#tracker-section" class="text-slate-600 hover:text-emerald-600 transition-colors flex items-center gap-2">
+                    <i data-lucide="check-square" class="w-4 h-4"></i> My Habits
+                </a>
+                <a href="#analytics-section" class="text-slate-600 hover:text-emerald-600 transition-colors flex items-center gap-2">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Analytics
+                </a>
+                <a href="#footer" class="text-slate-600 hover:text-emerald-600 transition-colors flex items-center gap-2">
+                    <i data-lucide="link" class="w-4 h-4"></i> Footer & Contact
+                </a>
+            </nav>
+
+            <!-- Quick Action & Mobile Hamburger Button -->
+            <div class="flex items-center gap-4">
+                <button onclick="openAddHabitModal()" class="hidden sm:inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-sm transition-all duration-300 hover:scale-105">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Habit
+                </button>
+                <button id="hamburger-btn" onclick="toggleMobileMenu()" class="md:hidden text-slate-700 hover:text-slate-900 p-2.5 rounded-xl bg-slate-100 border border-slate-200">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Collapsible Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 px-4 pt-3 pb-6 space-y-3 shadow-lg">
+            <a href="#hero" onclick="toggleMobileMenu()" class="block px-4 py-3 rounded-xl font-medium text-emerald-600 bg-emerald-50 flex items-center gap-3">
+                <i data-lucide="home" class="w-5 h-5"></i> Home
+            </a>
+            <a href="#tracker-section" onclick="toggleMobileMenu()" class="block px-4 py-3 rounded-xl font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-3">
+                <i data-lucide="check-square" class="w-5 h-5"></i> My Habits
+            </a>
+            <a href="#analytics-section" onclick="toggleMobileMenu()" class="block px-4 py-3 rounded-xl font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-3">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i> Analytics
+            </a>
+            <a href="#footer" onclick="toggleMobileMenu()" class="block px-4 py-3 rounded-xl font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-3">
+                <i data-lucide="link" class="w-5 h-5"></i> Footer & Contact
+            </a>
+            <button onclick="openAddHabitModal(); toggleMobileMenu();" class="w-full text-center bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-sm flex items-center justify-center gap-2">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i> Create Habit
+            </button>
+        </div>
+    </header>
+
+    <!-- 2. HERO / FIRST SECTION -->
+    <section id="hero" class="relative overflow-hidden py-12 md:py-16 border-b border-slate-200 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-12 shadow-sm">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                    
+                    <!-- Left Side: Bold Title, Brief Text, CTAs, Live Badges -->
+                    <div class="lg:col-span-7 space-y-6 text-center lg:text-left" style="animation: fadeInLeft 1s ease-in-out;">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold" >
+                            <i data-lucide="zap" class="w-4 h-4 text-emerald-600"></i> Set Duration & Master Unbreakable Streaks
+                        </div>
+                        
+                        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);">
+                            Track Your Habits, Build <span class="text-emerald-600 transition-colors duration-300 hover:text-emerald-800 cursor-pointer" >Unstoppable Streaks.</span>
+                        </h1>
+                        
+                        <p class="text-slate-600 text-base sm:text-lg leading-relaxed">
+                            Turn daily actions into lifelong discipline. Set exact target durations for your habit challenges, log daily check-ins, record reflections, and build momentum.
+                        </p>
+
+                        <!-- CTA Buttons -->
+                        <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                            <button onclick="openAddHabitModal()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3.5 rounded-2xl shadow-sm transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 text-base">
+                                <i data-lucide="target" class="w-5 h-5"></i> Start Tracking 
+                            </button>
+                            <a href="#tracker-section" class="w-full sm:w-auto bg-white hover:bg-slate-100 text-slate-700 font-semibold px-7 py-3.5 rounded-2xl border border-slate-300 transition-all duration-300 flex items-center justify-center gap-2 text-base">
+                                <i data-lucide="layers" class="w-5 h-5 text-slate-600"></i> View Active Habits
+                            </a>
+                        </div>
+
+                        <!-- Live Summary Badges -->
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-200">
+                            <div class="bg-white p-3 rounded-2xl border border-slate-200 text-left shadow-sm">
+                                <div class="text-xs text-slate-500 font-medium">Active Streaks</div>
+                                <div class="text-xl font-black text-slate-900 flex items-center gap-1.5 mt-0.5">
+                                    <i data-lucide="flame" class="w-4 h-4 text-emerald-600"></i> <span id="hero-active-streaks-count">0</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-3 rounded-2xl border border-slate-200 text-left shadow-sm">
+                                <div class="text-xs text-slate-500 font-medium">Total Check-Ins</div>
+                                <div class="text-xl font-black text-slate-900 flex items-center gap-1.5 mt-0.5">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i> <span id="hero-total-checkins-count">0</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-3 rounded-2xl border border-slate-200 text-left col-span-2 sm:col-span-1 shadow-sm">
+                                <div class="text-xs text-slate-500 font-medium">Target Completion</div>
+                                <div class="text-xl font-black text-emerald-600 flex items-center gap-1.5 mt-0.5">
+                                    <i data-lucide="trophy" class="w-4 h-4 text-emerald-600"></i> <span id="hero-target-completion-rate">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Side: Visual Progress Ring -->
+                    <div class="lg:col-span-5 flex justify-center">
+                        <div class="relative w-full max-w-md aspect-square bg-white rounded-3xl p-6 border border-slate-200 flex flex-col justify-between shadow-sm float-animation">
+                            <!-- Header Info -->
+                            <div class="flex items-center justify-between z-10">
+                                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Streak Momentum Pulse
+                                </span>
+                                <span class="text-xs text-slate-500 font-mono font-semibold" id="hero-date-display">Today</span>
+                            </div>
+
+                            <!-- Animated Visual SVG Graphic -->
+                            <div class="my-auto py-4 flex flex-col items-center justify-center z-10 relative">
+                                <div class="relative w-48 h-48 flex items-center justify-center">
+                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="7" class="text-slate-100" fill="transparent" />
+                                        <circle id="hero-progress-circle" cx="50" cy="50" r="42" stroke="currentColor" stroke-width="7" stroke-dasharray="263.89" stroke-dashoffset="65" stroke-linecap="round" fill="transparent" class="text-emerald-500 transition-all duration-1000" />
+                                    </svg>
+                                    
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center pulse-ring-anim">
+                                        <div class="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-1">
+                                            <i data-lucide="flame" class="w-8 h-8 text-emerald-600"></i>
+                                        </div>
+                                        <span class="text-3xl font-black text-slate-900" id="hero-max-streak">0</span>
+                                        <span class="text-[10px] uppercase font-bold tracking-widest text-slate-500">Top Day Streak</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Floating Badges Footer -->
+                            <div class="grid grid-cols-2 gap-3 z-10 pt-3 border-t border-slate-100 text-xs">
+                                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-center gap-2">
+                                    <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                                    <div>
+                                        <span class="block text-slate-900 font-bold text-xs" id="hero-streak-health">100% Solid</span>
+                                        <span class="text-[9px] text-slate-500 font-medium">Streak Defense</span>
+                                    </div>
+                                </div>
+                                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-center gap-2">
+                                    <i data-lucide="zap" class="w-4 h-4 text-emerald-600"></i>
+                                    <div>
+                                        <span class="block text-slate-900 font-bold text-xs" id="hero-checked-today-count">0 Habits</span>
+                                        <span class="text-[9px] text-slate-500 font-medium">Checked Today</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. MAIN TRACKER SECTION -->
+    <main id="tracker-section" class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full space-y-8">
+        
+        <!-- Controls & Filter Header -->
+        <div class="bg-white border border-slate-200 p-6 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+            <div>
+                <h2 class="text-2xl font-black text-slate-900 flex items-center gap-3">
+                    <i data-lucide="calendar" class="w-6 h-6 text-emerald-600"></i> Habit & Streak Hub
+                </h2>
+                <p class="text-slate-600 text-sm mt-1">Daily check-ins log progress toward your defined target challenge duration.</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <!-- Category Search/Filter -->
+                <div class="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-1 text-xs font-semibold">
+                    <button onclick="setFilter('all')" id="filter-all" class="px-3 py-1.5 rounded-lg text-emerald-700 bg-white shadow-sm transition-colors font-bold">All</button>
+                    <button onclick="setFilter('active')" id="filter-active" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-colors">Active</button>
+                    <button onclick="setFilter('completed')" id="filter-completed" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-colors">Completed</button>
+                </div>
+                
+                <button onclick="openAddHabitModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all flex items-center gap-2 shadow-sm">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Add Habit
+                </button>
+            </div>
+        </div>
+
+        <!-- Missed Day Streak Reset Alert Banner (Dynamic) -->
+        <div id="streak-loss-banner" class="hidden bg-slate-100 border border-slate-300 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center shrink-0">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-slate-900" id="streak-loss-title">Streak Reset Alert</h4>
+                    <p class="text-xs text-slate-600 mt-0.5" id="streak-loss-desc">You missed a scheduled check-in yesterday! Don't get discouraged—re-ignite your streak today!</p>
+                </div>
+            </div>
+            <button onclick="dismissStreakBanner()" class="text-slate-400 hover:text-slate-700 p-1">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Habits Cards List Container -->
+        <div id="habits-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic habit cards generated by JS -->
+        </div>
+
+        <!-- 3.5 ANALYTICS & CALENDAR OVERVIEW SECTION -->
+        <section id="analytics-section" class="pt-8 border-t border-slate-200">
+            <div class="bg-white border border-slate-200 p-6 sm:p-8 rounded-3xl space-y-6 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-black text-slate-900 flex items-center gap-2">
+                            <i data-lucide="activity" class="w-5 h-5 text-emerald-600"></i> Consistency Heatmap & Challenge Log
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-1">Review active intervals and daily consistency across all habits.</p>
+                    </div>
+                </div>
+
+                <!-- Global Calendar Heatmap Overview Grid -->
+                <div class="bg-slate-50 p-4 sm:p-6 rounded-2xl border border-slate-200 space-y-4">
+                    <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+                        <span>Last 14 Days Activity</span>
+                        <span class="text-emerald-700 font-mono font-bold">Emerald Green = Checked In</span>
+                    </div>
+                    <div id="global-calendar-grid" class="grid grid-cols-7 sm:grid-cols-14 gap-2">
+                        <!-- Dynamic Calendar Tiles -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: ADD / EDIT HABIT -->
+    <div id="habit-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 w-full max-w-lg rounded-3xl p-6 sm:p-8 shadow-xl relative">
+            <button onclick="closeHabitModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            
+            <h3 id="modal-title" class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
+                <i data-lucide="plus-circle" class="w-6 h-6 text-emerald-600"></i> Add New Habit
+            </h3>
+
+            <form id="habit-form" onsubmit="handleHabitSubmit(event)" class="space-y-4">
+                <input type="hidden" id="habit-id">
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Habit Name</label>
+                    <input type="text" id="habit-name" required placeholder="e.g., Morning 20-Min Cardio, Read 20 Pages" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-colors">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Category</label>
+                        <select id="habit-category" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-colors">
+                            <option value="Health">Health & Fitness</option>
+                            <option value="Productivity">Productivity</option>
+                            <option value="Mindset">Mindset & Mindfulness</option>
+                            <option value="Learning">Learning & Skill</option>
+                            <option value="Finance">Finance</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Frequency</label>
+                        <select id="habit-interval" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-colors">
+                            <option value="Daily">Daily Check-in</option>
+                            <option value="Weekdays">Weekdays (Mon-Fri)</option>
+                            <option value="Weekends">Weekends (Sat-Sun)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- SPECIFIC TARGET INTERVAL / DURATION SPECIFICATION -->
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-emerald-700">
+                        <i data-lucide="flag" class="w-3.5 h-3.5 inline mr-1"></i> Target Goal Duration (Challenge Days)
+                    </label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button type="button" onclick="setPresetDuration(7)" class="preset-duration-btn py-2 px-3 rounded-xl border border-slate-200 text-xs font-bold bg-white text-slate-700 hover:border-emerald-500 hover:text-emerald-700 transition-colors">7 Days</button>
+                        <button type="button" onclick="setPresetDuration(14)" class="preset-duration-btn py-2 px-3 rounded-xl border border-slate-200 text-xs font-bold bg-white text-slate-700 hover:border-emerald-500 hover:text-emerald-700 transition-colors">14 Days</button>
+                        <button type="button" onclick="setPresetDuration(30)" class="preset-duration-btn py-2 px-3 rounded-xl border border-slate-200 text-xs font-bold bg-white text-slate-700 hover:border-emerald-500 hover:text-emerald-700 transition-colors">30 Days</button>
+                        <button type="button" onclick="setPresetDuration(60)" class="preset-duration-btn py-2 px-3 rounded-xl border border-slate-200 text-xs font-bold bg-white text-slate-700 hover:border-emerald-500 hover:text-emerald-700 transition-colors">60 Days</button>
+                    </div>
+                    <div class="flex items-center gap-3 pt-1">
+                        <span class="text-xs text-slate-600 font-medium">Or Custom Target Days:</span>
+                        <input type="number" id="habit-target-days" min="1" max="365" value="30" required class="w-24 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-center text-emerald-700 font-bold text-sm focus:outline-none focus:border-emerald-500">
+                        <span class="text-xs text-slate-600 font-medium">Total Days</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Initial Goal Note / Intention</label>
+                    <textarea id="habit-notes" rows="2" placeholder="Why is this habit important to you?" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm focus:outline-none focus:border-emerald-500 focus:bg-white resize-none transition-colors"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+                    <button type="button" onclick="closeHabitModal()" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm hover:bg-slate-200 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-sm transition-colors">Save Habit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: HABIT NOTES & JOURNAL DRAWER -->
+    <div id="notes-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-xl relative">
+            <button onclick="closeNotesModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <h3 class="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                <i data-lucide="file-text" class="w-5 h-5 text-emerald-600"></i> Habit Journal & Notes
+            </h3>
+            <p id="notes-habit-title" class="text-xs text-slate-500 mb-4 font-semibold uppercase tracking-wider"></p>
+            
+            <input type="hidden" id="notes-habit-id">
+            <textarea id="notes-habit-textarea" rows="5" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-900 text-sm focus:outline-none focus:border-emerald-500 focus:bg-white resize-none mb-4 transition-colors" placeholder="Log your reflections, key learnings, or daily notes for this habit entry..."></textarea>
+            
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeNotesModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold hover:bg-slate-200">Close</button>
+                <button type="button" onclick="saveHabitNotes()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-colors">Save Journal Entry</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONGRATULATORY TROPHY CELEBRATION -->
+    <div id="completion-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 w-full max-w-md rounded-3xl p-8 shadow-xl text-center relative">
+            <div class="w-20 h-20 mx-auto rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 border border-emerald-100">
+                <i data-lucide="trophy" class="w-10 h-10 stroke-[2.5]"></i>
+            </div>
+            <h3 class="text-3xl font-black text-slate-900">Target Completed!</h3>
+            <p id="completion-modal-text" class="text-slate-600 text-sm mt-2">You completed 100% of your target challenge duration!</p>
+            <div class="mt-6 pt-4 border-t border-slate-200 flex justify-center">
+                <button onclick="closeCompletionModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3 rounded-2xl text-sm shadow-sm transition-colors">Victory!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. FOOTER SECTION -->
+    <footer id="footer" class="bg-white border-t border-slate-200 mt-20 pt-16 pb-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-slate-200">
+                
+                <!-- Col 1: Brand & Description -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3" style="justify-content: center;">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black shadow-sm">
+                            <i data-lucide="flame" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-xl font-black text-slate-900 hover:text-emerald-600 transition-colors">Streakify</span>
+                    </div>
+                    <p class="text-slate-600 text-xs leading-relaxed" style="text-align: center;">
+                        Precision habit building & streak management. Set challenge durations, record daily check-ins, and build lifelong discipline systematically.
+                    </p>
+                </div>
+
+                <!-- Col 2: Quick Links -->
+                <div class="space-y-3" style="text-align:center">
+                    <h4 class="text-slate-900 font-bold text-sm">Quick Links</h4>
+                    <ul class="space-y-2 text-xs text-slate-600">
+                        <li><a href="#hero" class="hover:text-emerald-600 transition-colors">Home Overview</a></li>
+                        <li><a href="#tracker-section" class="hover:text-emerald-600 transition-colors">My Habit Dashboard</a></li>
+                        <li><a href="#analytics-section" class="hover:text-emerald-600 transition-colors">Analytics & Heatmap</a></li>
+                        <li><a href="#footer" class="hover:text-emerald-600 transition-colors">Footer Details & Contact</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Contact Info & Address & Socials -->
+                <div class="space-y-3" style="text-align:center">
+                    <h4 class="text-slate-900 font-bold text-sm">Contact Info</h4>
+                    <p class="text-slate-600 text-xs">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600 inline mr-1.5"></i> 100 ikeja expressway, Lagos, Nigeria
+                    </p>
+                    <p class="text-slate-600 text-xs">
+                        <i data-lucide="mail" class="w-4 h-4 text-emerald-600 inline mr-1.5"></i> sphinxly@gmail.com
+                    </p>
+                    
+                    <div class="pt-3">
+                        <span class="block text-xs font-bold text-slate-900 mb-2.5 uppercase tracking-wider">Connect With Us</span>
+                        <div class="flex items-center gap-3" style="justify-content: center;">
+                            <!-- Twitter / X Icon -->
+                            <a href="https://x.com/sphi_nx043" target="_blank" rel="noopener noreferrer" title="Twitter / X" class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-slate-100 flex items-center justify-center transition-all duration-300 shadow-sm hover:scale-105">
+                                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                </svg>
+                            </a>
+                            <!-- GitHub Icon -->
+                            <a href="https://github.com/sphinxly1" target="_blank" rel="noopener noreferrer" title="GitHub" class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-slate-100 flex items-center justify-center transition-all duration-300 shadow-sm hover:scale-105">
+                                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                                </svg>
+                            </a>
+                            <!-- LinkedIn Icon -->
+                            <a href="https://www.linkedin.com/in/nwabuife-udochukwu-55847a384?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" rel="noopener noreferrer" title="LinkedIn" class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-slate-100 flex items-center justify-center transition-all duration-300 shadow-sm hover:scale-105">
+                                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.75a1.48 1.48 0 1 0 0 2.96 1.48 1.48 0 0 0 0-2.96z"/>
+                                </svg>
+                            </a>
+                            <!-- Instagram Icon -->
+                            <a href="https://www.instagram.com/sphinxly_?psln=ZzMIemwzdXFvenK5" target="_blank" rel="noopener noreferrer" title="Instagram" class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-slate-100 flex items-center justify-center transition-all duration-300 shadow-sm hover:scale-105">
+                                <svg class="w-5 h-5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                                </svg>
+                            </a>
+                            <!-- YouTube Icon -->
+                            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" title="YouTube" class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:text-emerald-600 hover:bg-slate-100 flex items-center justify-center transition-all duration-300 shadow-sm hover:scale-105">
+                                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Col 4: Quick Contact Form -->
+                <div class="space-y-3">
+                    <h4 class="text-slate-900 font-bold text-sm" style="text-align: center;">Send Note / Message</h4>
+                    <form onsubmit="handleFooterForm(event)" class="space-y-2">
+                        <input type="text" id="footer-name" required placeholder="Your Name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition-colors">
+                        <input type="email" id="footer-email" required placeholder="Your Email" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition-colors">
+                        <textarea id="footer-note" required rows="2" placeholder="Your Note or Feedback..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white resize-none transition-colors"></textarea>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs transition-all shadow-sm">Submit Feedback</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="pt-8 text-center text-xs text-slate-500 font-medium">
+                &copy; 2026 HabitPulse Web Application. Built with HTML, Tailwind CSS & JavaScript.
+            </div>
+        </div>
+    </footer>
+
+    <!-- 5. JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        // App State
+        let currentFilter = 'all';
+        let habits = JSON.parse(localStorage.getItem('habitpulse_habits_v2')) || [
+            {
+                id: '1',
+                name: 'Daily 30-Min Reading',
+                category: 'Learning',
+                interval: 'Daily',
+                targetDays: 30,
+                completedCount: 14,
+                streak: 7,
+                maxStreak: 10,
+                lastChecked: getYesterdayStr(),
+                history: generateMockHistory(14),
+                notes: 'Focusing on personal development & technical books.'
+            },
+            {
+                id: '2',
+                name: 'Morning Workout & Stretch',
+                category: 'Health',
+                interval: 'Daily',
+                targetDays: 14,
+                completedCount: 12,
+                streak: 4,
+                maxStreak: 6,
+                lastChecked: getYesterdayStr(),
+                history: generateMockHistory(12),
+                notes: 'Push-ups, core routine, and hamstring mobility.'
+            }
+        ];
+
+        // Helper Functions for Dates
+        function getTodayStr() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function getYesterdayStr() {
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            return d.toISOString().split('T')[0];
+        }
+
+        function generateMockHistory(daysBack) {
+            const arr = [];
+            for (let i = 0; i < daysBack; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                arr.push(d.toISOString().split('T')[0]);
+            }
+            return arr;
+        }
+
+        // Initialize on Window Load
+        window.onload = function() {
+            lucide.createIcons();
+            document.getElementById('hero-date-display').innerText = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            checkMissedCheckins();
+            saveAndRender();
+        };
+
+        // Mobile Nav Toggle
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        // Filter Switcher
+        function setFilter(filter) {
+            currentFilter = filter;
+            ['all', 'active', 'completed'].forEach(f => {
+                const btn = document.getElementById(`filter-${f}`);
+                if (f === filter) {
+                    btn.className = "px-3 py-1.5 rounded-lg text-emerald-700 bg-white shadow-sm transition-colors font-bold";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-colors";
+                }
+            });
+            renderHabits();
+        }
+
+        // Check if user missed check-ins yesterday and reset streak
+        function checkMissedCheckins() {
+            const today = getTodayStr();
+            const yesterday = getYesterdayStr();
+            let lostHabits = [];
+
+            habits.forEach(h => {
+                if (h.lastChecked && h.lastChecked !== today && h.lastChecked !== yesterday) {
+                    if (h.streak > 0) {
+                        lostHabits.push(h.name);
+                        h.streak = 0;
+                    }
+                }
+            });
+
+            if (lostHabits.length > 0) {
+                const banner = document.getElementById('streak-loss-banner');
+                banner.classList.remove('hidden');
+                document.getElementById('streak-loss-desc').innerText = `You missed check-in for "${lostHabits.join(', ')}". Streak reset to 0. Bounce back today!`;
+            }
+        }
+
+        function dismissStreakBanner() {
+            document.getElementById('streak-loss-banner').classList.add('hidden');
+        }
+
+        // Save & Render Everything
+        function saveAndRender() {
+            localStorage.setItem('habitpulse_habits_v2', JSON.stringify(habits));
+            updateHeroStats();
+            renderHabits();
+            renderGlobalCalendar();
+        }
+
+        // Update Hero Stats
+        function updateHeroStats() {
+            const today = getTodayStr();
+            const activeCount = habits.filter(h => h.completedCount < h.targetDays).length;
+            const totalCheckins = habits.reduce((acc, h) => acc + h.completedCount, 0);
+            const checkedToday = habits.filter(h => h.lastChecked === today).length;
+            const maxStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak), 0) : 0;
+            
+            const totalTargetDays = habits.reduce((acc, h) => acc + h.targetDays, 0);
+            const totalDoneDays = habits.reduce((acc, h) => acc + h.completedCount, 0);
+            const overallRate = totalTargetDays > 0 ? Math.round((totalDoneDays / totalTargetDays) * 100) : 0;
+
+            document.getElementById('hero-active-streaks-count').innerText = habits.filter(h => h.streak > 0).length;
+            document.getElementById('hero-total-checkins-count').innerText = totalCheckins;
+            document.getElementById('hero-target-completion-rate').innerText = `${overallRate}%`;
+            document.getElementById('hero-max-streak').innerText = maxStreak;
+            document.getElementById('hero-checked-today-count').innerText = `${checkedToday} Habits`;
+
+            // Stroke Offset for Visual SVG
+            const circle = document.getElementById('hero-progress-circle');
+            const circumference = 263.89;
+            const offset = circumference - (overallRate / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        // Render Habit Cards
+        function renderHabits() {
+            const container = document.getElementById('habits-list-container');
+            container.innerHTML = '';
+
+            let filtered = habits;
+            if (currentFilter === 'active') filtered = habits.filter(h => h.completedCount < h.targetDays);
+            if (currentFilter === 'completed') filtered = habits.filter(h => h.completedCount >= h.targetDays);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 bg-white rounded-3xl border border-slate-200 shadow-sm">
+                        <i data-lucide="inbox" class="w-10 h-10 text-slate-400 mx-auto mb-2"></i>
+                        <p class="text-slate-600 text-sm font-semibold">No habits found under this filter view.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            const today = getTodayStr();
+
+            filtered.forEach(habit => {
+                const isCheckedToday = habit.lastChecked === today;
+                const isFinished = habit.completedCount >= habit.targetDays;
+                const pct = Math.min(100, Math.round((habit.completedCount / habit.targetDays) * 100));
+
+                const card = document.createElement('div');
+                card.className = `bg-white border ${isFinished ? 'border-slate-300 bg-slate-50' : 'border-slate-200'} p-6 rounded-3xl flex flex-col justify-between shadow-sm relative group hover:border-emerald-300 transition-colors duration-300`;
+
+                card.innerHTML = `
+                    <div>
+                        <!-- Category Tag & Edit Actions -->
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200">${habit.category} (${habit.interval})</span>
+                            <div class="flex items-center gap-1">
+                                <button onclick="openEditHabitModal('${habit.id}')" class="text-slate-400 hover:text-slate-700 p-1.5"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="deleteHabit('${habit.id}')" class="text-slate-400 hover:text-slate-700 p-1.5"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Habit Name & Goal Intention Note -->
+                        <h3 class="text-xl font-black text-slate-900 mt-3 group-hover:text-emerald-600 transition-colors">${habit.name}</h3>
+                        <p class="text-xs text-slate-500 mt-1 line-clamp-2">${habit.notes || 'No notes added.'}</p>
+
+                        <!-- Progress Bar & Target Days -->
+                        <div class="mt-5 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs font-bold">
+                                <span class="text-slate-500">Target Duration</span>
+                                <span class="text-emerald-600">${habit.completedCount} / ${habit.targetDays} Days (${pct}%)</span>
+                            </div>
+                            <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                                <div class="h-full bg-emerald-500 transition-all duration-500" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Mini Calendar Check-in History Dots -->
+                        <div class="mt-4 pt-3 border-t border-slate-100">
+                            <span class="text-[10px] font-bold uppercase text-slate-400 block mb-1.5">Recent Log Grid</span>
+                            <div class="flex items-center gap-1.5 overflow-x-auto py-1">
+                                ${renderMiniCalendar(habit)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Details & Check-In Action Button -->
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-xl border border-emerald-100 text-xs font-bold">
+                            <i data-lucide="flame" class="w-3.5 h-3.5 text-emerald-600"></i> ${habit.streak} Day Streak
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button onclick="openNotesModal('${habit.id}')" class="p-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200 text-xs font-bold transition-colors" title="Open Journal Notes">
+                                <i data-lucide="file-text" class="w-4 h-4"></i>
+                            </button>
+                            
+                            ${isFinished ? `
+                                <span class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 border border-slate-300 text-xs font-bold flex items-center gap-1">
+                                    <i data-lucide="award" class="w-4 h-4 text-emerald-600"></i> Completed
+                                </span>
+                            ` : `
+                                <button onclick="checkIn('${habit.id}')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${isCheckedToday ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}">
+                                    ${isCheckedToday ? 'Checked In' : 'Check In Today'}
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        // Render Mini Calendar Tiles for Individual Card
+        function renderMiniCalendar(habit) {
+            let html = '';
+            const history = habit.history || [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                const checked = history.includes(dateStr);
+                
+                html += `
+                    <div class="w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-bold ${checked ? 'bg-emerald-500 text-white shadow-sm' : 'bg-slate-100 text-slate-400 border border-slate-200'}" title="${dateStr}">
+                        ${checked ? '✓' : ''}
+                    </div>
+                `;
+            }
+            return html;
+        }
+
+        // Render Analytics Heatmap Grid
+        function renderGlobalCalendar() {
+            const grid = document.getElementById('global-calendar-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            for (let i = 13; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                
+                // Count total check-ins on this day across habits
+                const countOnDay = habits.filter(h => (h.history || []).includes(dateStr)).length;
+                
+                let bgClass = 'bg-white border-slate-200 text-slate-500';
+                if (countOnDay === 1) bgClass = 'bg-emerald-50 border-emerald-200 text-emerald-800 font-bold';
+                if (countOnDay >= 2) bgClass = 'bg-emerald-600 border-emerald-700 text-white font-black shadow-sm';
+
+                const dayTile = document.createElement('div');
+                dayTile.className = `p-2.5 rounded-xl border flex flex-col items-center justify-center text-center ${bgClass}`;
+                dayTile.innerHTML = `
+                    <span class="text-[9px] uppercase font-bold opacity-80">${d.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                    <span class="text-xs font-black mt-0.5">${d.getDate()}</span>
+                `;
+                grid.appendChild(dayTile);
+            }
+        }
+
+        // Check-in Action
+        function checkIn(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
+
+            const today = getTodayStr();
+
+            if (habit.lastChecked === today) {
+                showToast(`Already checked in for "${habit.name}" today!`, 'info');
+                return;
+            }
+
+            habit.completedCount += 1;
+            habit.streak += 1;
+            if (habit.streak > (habit.maxStreak || 0)) habit.maxStreak = habit.streak;
+            habit.lastChecked = today;
+            if (!habit.history) habit.history = [];
+            habit.history.push(today);
+
+            saveAndRender();
+
+            // Confetti Burst Celebration
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+
+            showToast(`Awesome! Day ${habit.streak} streak logged for "${habit.name}"!`, 'success');
+
+            // Trigger Trophy Modal if full Target Duration is met
+            if (habit.completedCount >= habit.targetDays) {
+                setTimeout(() => {
+                    confetti({ particleCount: 250, spread: 120, origin: { y: 0.4 } });
+                    document.getElementById('completion-modal-text').innerText = `Congratulations! You successfully completed all ${habit.targetDays} target days of "${habit.name}"!`;
+                    document.getElementById('completion-modal').classList.remove('hidden');
+                }, 400);
+            }
+        }
+
+        // Preset Duration Selector in Form
+        function setPresetDuration(days) {
+            document.getElementById('habit-target-days').value = days;
+        }
+
+        // Add/Edit Habit Modal Controls
+        function openAddHabitModal() {
+            document.getElementById('modal-title').innerHTML = '<i data-lucide="plus-circle" class="w-6 h-6 text-emerald-600"></i> Add New Habit';
+            document.getElementById('habit-id').value = '';
+            document.getElementById('habit-name').value = '';
+            document.getElementById('habit-category').value = 'Health';
+            document.getElementById('habit-interval').value = 'Daily';
+            document.getElementById('habit-target-days').value = 30;
+            document.getElementById('habit-notes').value = '';
+            document.getElementById('habit-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openEditHabitModal(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
+
+            document.getElementById('modal-title').innerHTML = '<i data-lucide="edit-3" class="w-6 h-6 text-emerald-600"></i> Edit Habit';
+            document.getElementById('habit-id').value = habit.id;
+            document.getElementById('habit-name').value = habit.name;
+            document.getElementById('habit-category').value = habit.category;
+            document.getElementById('habit-interval').value = habit.interval;
+            document.getElementById('habit-target-days').value = habit.targetDays;
+            document.getElementById('habit-notes').value = habit.notes || '';
+            document.getElementById('habit-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeHabitModal() {
+            document.getElementById('habit-modal').classList.add('hidden');
+        }
+
+        function handleHabitSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('habit-id').value;
+            const name = document.getElementById('habit-name').value;
+            const category = document.getElementById('habit-category').value;
+            const interval = document.getElementById('habit-interval').value;
+            const targetDays = parseInt(document.getElementById('habit-target-days').value) || 30;
+            const notes = document.getElementById('habit-notes').value;
+
+            if (id) {
+                const habit = habits.find(h => h.id === id);
+                if (habit) {
+                    habit.name = name;
+                    habit.category = category;
+                    habit.interval = interval;
+                    habit.targetDays = targetDays;
+                    habit.notes = notes;
+                    showToast(`Updated "${name}".`, 'success');
+                }
+            } else {
+                const newHabit = {
+                    id: Date.now().toString(),
+                    name,
+                    category,
+                    interval,
+                    targetDays,
+                    completedCount: 0,
+                    streak: 0,
+                    maxStreak: 0,
+                    lastChecked: null,
+                    history: [],
+                    notes
+                };
+                habits.push(newHabit);
+                showToast(`Habit "${name}" created with ${targetDays}-day target!`, 'success');
+            }
+
+            closeHabitModal();
+            saveAndRender();
+        }
+
+        function deleteHabit(id) {
+            habits = habits.filter(h => h.id !== id);
+            saveAndRender();
+            showToast('Habit deleted.', 'info');
+        }
+
+        // Notes Modal Controls
+        function openNotesModal(id) {
+            const habit = habits.find(h => h.id === id);
+            if (!habit) return;
+            document.getElementById('notes-habit-id').value = habit.id;
+            document.getElementById('notes-habit-title').innerText = `Journal Entry: ${habit.name}`;
+            document.getElementById('notes-habit-textarea').value = habit.notes || '';
+            document.getElementById('notes-modal').classList.remove('hidden');
+        }
+
+        function closeNotesModal() {
+            document.getElementById('notes-modal').classList.add('hidden');
+        }
+
+        function saveHabitNotes() {
+            const id = document.getElementById('notes-habit-id').value;
+            const habit = habits.find(h => h.id === id);
+            if (habit) {
+                habit.notes = document.getElementById('notes-habit-textarea').value;
+                saveAndRender();
+                showToast('Journal notes updated.', 'success');
+            }
+            closeNotesModal();
+        }
+
+        function closeCompletionModal() {
+            document.getElementById('completion-modal').classList.add('hidden');
+        }
+
+        // Toast Messages
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bg = 'bg-slate-900 text-white';
+            if (type === 'info') bg = 'bg-emerald-600 text-white';
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl font-bold text-xs ${bg} transition-all duration-300`;
+            toast.innerHTML = `<span>${msg}</span>`;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Footer Contact Form
+        function handleFooterForm(e) {
+            e.preventDefault();
+            const name = document.getElementById('footer-name').value;
+            showToast(`Thank you ${name}, your message was sent successfully!`, 'success');
+            e.target.reset();
+        }
+    </script>
+</body>
+</html>
